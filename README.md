@@ -1,6 +1,3 @@
-# VUT-iss-projekt
-
-
 # <p align="center">ISS/VSG Projekt 2021/22</p>
 <p align="center">Honza Černocký, Honza Brukner a Honza Švec, ÚPGM FIT VUT</br>
 November 17, 2021</p>
