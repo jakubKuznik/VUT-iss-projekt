@@ -71,17 +71,38 @@ def open_waw_file(filepath):
     ## Open waw file
     # Code from iss_project: Zmolikova #####################
     sample_rate, data = wavfile.read(filepath)
-    data = data / 2 ** 15   ## NORMALIZE SIGNAL 
     ########################################################
     return sample_rate, data
 
 ##
+# Normalize data 
+def normalize_signal(data):
+    return data / 2 ** 15   ## NORMALIZE SIGNAL 
+
+##
+# Get middle value from signal
+def middle_value(data):
+
+    return 0
+
+##
+# split to frames 
+def split_to_frames(data):
+
+    return 0
+
+##
 # Call command exit program if error.  
 def call_command(command, data, sample_rate):
-    
+
+
     if len(command) == 0:
         print("ERROR missing command.")
         exit(1)
+    
+    ## normalize signal for commands 1 - 8
+    if command != "basic" and command != "0":
+        data = normalize_signal(data)
 
     if command == "basic" or command == "0":
         create_picture(data, sample_rate)
