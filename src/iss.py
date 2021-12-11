@@ -3,11 +3,12 @@
 # xkuzni04@stud.fit.vutbr.cz
 
 
-import os.path
+import os.path                  ## for checking if file exist 
 import time
 import numpy as np
 import sys
-from scipy.io import wavfile ## For waw file loading
+import wavio ## For waw file loading
+
 
 ##
 # Prints help message
@@ -15,14 +16,14 @@ def help():
     print("execution: ..........    ./iss.py input_file [command]")
     print("execution: ..........    ./iss.py -h")
     print(".......................................................")
-    print("     Command: frame ......    ./iss.py input_file frame")
-    print("     Command: dft   ......    ./iss.py input_file dft")
-    print("     Command: spect ......    ./iss.py input_file spect")
-    print("     Command: dist  ......    ./iss.py input_file dist")
-    print("     Command: gene  ......    ./iss.py input_file gene")
-    print("     Command: nul_p ......    ./iss.py input_file nul_p")
-    print("     Command: filt  ......    ./iss.py input_file filt")
-    print("     Command: freq  ......    ./iss.py input_file freq")
+    print("     Command: frame || 1 ......    ./iss.py input_file frame")
+    print("     Command: dft   || 2 ......    ./iss.py input_file dft")
+    print("     Command: spect || 3 ......    ./iss.py input_file spect")
+    print("     Command: dist  || 4 ......    ./iss.py input_file dist")
+    print("     Command: gene  || 5 ......    ./iss.py input_file gene")
+    print("     Command: nul_p || 6 ......    ./iss.py input_file nul_p")
+    print("     Command: filt  || 7 ......    ./iss.py input_file filt")
+    print("     Command: freq  || 8 ......    ./iss.py input_file freq")
     print("......................................................")
     return 0
 
@@ -56,9 +57,50 @@ def parse_arguments(args):
 
 
 ##
-#
-def open_waw_file():
+# open file from filepath
+def open_waw_file(filepath):
+
+    ## if file doesn't exist.
+    if os.path.isfile(filepath) == False:
+        print("ERROR: file: .... " + filepath + " .... doesn't exist.")
+        exit()
+
+    ## Open waw file
+    # Code from iss_project: Zmolikova #####################
+    d = wavio.read(filepath)
+    data = d.data
+    data = data / 2 ** 15   ## NORMALIZE SIGNAL MAGIC CONSTANT
+    print(data.min(), data.max())
+    ########################################################
+    return 0
+
+##
+# Call command exit program if error.  
+def call_command(command, data):
     
+    if len(command) == 0:
+        print("ERROR missing command.")
+        exit(1)
+
+    if command == "frame" or command == "1":
+        print("frame")
+    elif command == "dft" or command == "2":
+        print("dft")
+    elif command == "spect" or command == "3":
+        print("spect")
+    elif command == "dist" or command == "4":
+        print("dist")
+    elif command == "gene" or command == "5":
+        print("gene")
+    elif command == "nul_p" or command == "6":
+        print("nul_p")
+    elif command == "filt" or command == "7":
+        print("filt")
+    elif command == "freq" or command == "8":
+        print("freq")
+    else:
+        print("ERROR unknow... " + command + " ...command.")
+        exit(1)
     return 0
 
 ##
@@ -67,10 +109,14 @@ def main():
 
     file_path = ""  # Path to waw file.
     command = ""    # Command that will be executed.
+    data = 0        # Data from waw file 
 
-    file_path, command = parse_arguments(sys.argv)
 
-    print(file_path, command)
+    file_path, command = parse_arguments(sys.argv) # get file_path and command 
+    
+    data = open_waw_file(file_path)                # open waw input file and store data 
+
+    call_command(command, data)                    # Call propriate command
 
     """
 
