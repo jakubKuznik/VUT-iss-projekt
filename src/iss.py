@@ -3,12 +3,13 @@
 # xkuzni04@stud.fit.vutbr.cz
 
 
-import os.path                  ## For checking if file exist 
+import os.path                      ## For checking if file exist 
 import time
 import numpy as np
 import sys
-import wavio                    ## For waw file loading
-import matplotlib.pyplot as plt ## For signal pictures
+import wavio                        ## For waw file loading
+import matplotlib.pyplot as plt     ## For signal pictures
+import matplotlib.colors as mcolors ## For signal plot collor 
 from scipy.io import wavfile
 
 ##
@@ -70,7 +71,7 @@ def open_waw_file(filepath):
     ## Open waw file
     # Code from iss_project: Zmolikova #####################
     sample_rate, data = wavfile.read(filepath)
-    data = data / 2 ** 15   ## NORMALIZE SIGNAL MAGIC CONSTANT
+    data = data / 2 ** 15   ## NORMALIZE SIGNAL 
     ########################################################
     return sample_rate, data
 
@@ -106,9 +107,9 @@ def call_command(command, data, sample_rate):
     return 0
 
 ##
-# get basic info about signal
-# Maximum and minimum value
-# lengt in sec and samples 
+# Get basic info about signal.
+# Maximum and minimum value.
+# Lenght in sec and samples.
 def basic_signal_info(data, sample_rate):
 
     data_min = data.min()
@@ -139,14 +140,12 @@ def create_picture(data, sample_rate):
 
     # time from to 
     time = np.linspace(0, lenght_sec, lenght_sam)
-    plt.figure()
-    
+    plt.figure(figsize=(20,10))
+    plt.plot(time, data, label="", color="green")
     plt.plot(time, data, label="")
-    plt.plot(time, data, label="")
-    #plt.legend()
     plt.xlabel("time [s]")
     plt.ylabel("amplitude")
-    plt.savefig('out.pdf')
+    plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
 
 ##
