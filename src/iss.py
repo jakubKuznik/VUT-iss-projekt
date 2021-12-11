@@ -3,12 +3,13 @@
 # xkuzni04@stud.fit.vutbr.cz
 
 
-import os.path                  ## for checking if file exist 
+import os.path                  ## For checking if file exist 
 import time
 import numpy as np
 import sys
-import wavio ## For waw file loading
-
+import wavio                    ## For waw file loading
+import matplotlib.pyplot as plt ## For signal pictures
+from scipy.io import wavfile
 
 ##
 # Prints help message
@@ -16,6 +17,7 @@ def help():
     print("execution: ..........    ./iss.py input_file [command]")
     print("execution: ..........    ./iss.py -h")
     print(".......................................................")
+    print("     Command: basic || 0 ......    ./iss.py input_file basic")
     print("     Command: frame || 1 ......    ./iss.py input_file frame")
     print("     Command: dft   || 2 ......    ./iss.py input_file dft")
     print("     Command: spect || 3 ......    ./iss.py input_file spect")
@@ -67,22 +69,22 @@ def open_waw_file(filepath):
 
     ## Open waw file
     # Code from iss_project: Zmolikova #####################
-    d = wavio.read(filepath)
-    data = d.data
+    sample_rate, data = wavfile.read(filepath)
     data = data / 2 ** 15   ## NORMALIZE SIGNAL MAGIC CONSTANT
-    print(data.min(), data.max())
     ########################################################
-    return 0
+    return sample_rate, data
 
 ##
 # Call command exit program if error.  
-def call_command(command, data):
+def call_command(command, data, sample_rate):
     
     if len(command) == 0:
         print("ERROR missing command.")
         exit(1)
 
-    if command == "frame" or command == "1":
+    if command == "basic" or command == "0":
+        create_picture(data, sample_rate)
+    elif command == "frame" or command == "1":
         print("frame")
     elif command == "dft" or command == "2":
         print("dft")
@@ -104,26 +106,67 @@ def call_command(command, data):
     return 0
 
 ##
+# get basic info about signal
+# Maximum and minimum value
+# lengt in sec and samples 
+def basic_signal_info(data, sample_rate):
+
+    data_min = data.min()
+    data_max = data.max()
+    lenght_sec = (data.shape[0] / sample_rate)
+    lenght_sam = data.shape[0]
+
+    return data_min, data_max, lenght_sec, lenght_sam
+
+##
+# print basic info about signals same as basic_signal_info
+# Maximum and minimum value
+# lengt in sec and samples 
+def basic_signal_info_print(data, sample_rate):
+    print("data min:            ", data.min() )
+    print("data max:            ", data.max() )
+    print("samples:             ", sample_rate)
+    print("lenght in sec:       ", (data.shape[0] / sample_rate))
+    print("lenght in samples:   ", data.shape[0] )
+
+
+##
+# Create picture and store to out.pdf  
+def create_picture(data, sample_rate):
+
+    # Get information about signal
+    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+
+    # time from to 
+    time = np.linspace(0, lenght_sec, lenght_sam)
+    plt.figure()
+    
+    plt.plot(time, data, label="")
+    plt.plot(time, data, label="")
+    #plt.legend()
+    plt.xlabel("time [s]")
+    plt.ylabel("amplitude")
+    plt.savefig('out.pdf')
+    plt.show()
+
+##
 #
 def main():
 
     file_path = ""  # Path to waw file.
     command = ""    # Command that will be executed.
     data = 0        # Data from waw file 
-
-
-    file_path, command = parse_arguments(sys.argv) # get file_path and command 
+    sample_rate = 0 # sample rate of waw file 
     
-    data = open_waw_file(file_path)                # open waw input file and store data 
 
-    call_command(command, data)                    # Call propriate command
 
-    """
+    file_path, command = parse_arguments(sys.argv)  # get file_path and command 
+    
+    sample_rate, data = open_waw_file(file_path)    # open waw input file and store data 
 
-    array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    print(array)
-    """
+    basic_signal_info_print(data, sample_rate)      # Print basic info about signal 
 
+    call_command(command, data, sample_rate)        # Call propriate command
 
 
 if __name__ == '__main__':
