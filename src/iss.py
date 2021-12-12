@@ -9,6 +9,7 @@ import numpy as np
 from numpy import mean              ## Expected value
 
 import sys
+from numpy.core.fromnumeric import size
 import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
 import matplotlib.colors as mcolors ## For signal plot collor 
@@ -137,16 +138,22 @@ def normalize_signal(data):
 # Split signal to frames with 1024 samples each frame overlaps frame before by 512
 def split_to_frames(data, sample_rate):
     
+    inc = 512    # overlap by 512
+    width = 1024 # one frame lenght    
+
+    new_data = np.copy(data)
+    new_data[0:len(data)] = 0
+    
     # Get information about signal
     data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
-    frames_sum = math.ceil(lenght_sam/1024)      #math.ceil number round up
 
-    for i in range(0, frames_sum):
-        for j in range(0, 1023):
-            print(data[j])
-    
-    return 0
+    for i in range(0, lenght_sam, inc):
+        new_data[i:i+width] += data[i:i+width]
+
+    return new_data
+
+
 
 ##################### 
 # Načtený signál ustředněte (odečtěte střednı́ hodnotu) a normalizujte do dynamického rozsahu -1 až 1 dělenı́m
@@ -155,13 +162,13 @@ def split_to_frames(data, sample_rate):
 # časovou osou v sekundách.
 def com_2_frame(data, sample_rate):
     
-    print("frame")
+    print("Frame")
     data = center_signal(data)
     data = normalize_signal(data)
     basic_signal_info_print(data, sample_rate)
     
-    #data = split_to_frames(data, sample_rate)
-    split_to_frames(data, sample_rate)
+    data = split_to_frames(data, sample_rate)
+    data = data[0:1024]
 
     create_picture(data, sample_rate)
 
