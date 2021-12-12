@@ -9,7 +9,7 @@ import numpy as np
 from numpy import mean              ## Expected value
 
 import sys
-from numpy.core.fromnumeric import size
+from numpy.core.fromnumeric import shape, size
 import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
 import matplotlib.colors as mcolors ## For signal plot collor 
@@ -22,15 +22,16 @@ def help():
     print("execution: ..........    ./iss.py input_file [command]")
     print("execution: ..........    ./iss.py -h")
     print(".......................................................")
-    print("     Command: basic || 0 ......    ./iss.py input_file basic")
-    print("     Command: frame || 1 ......    ./iss.py input_file frame")
-    print("     Command: dft   || 2 ......    ./iss.py input_file dft")
-    print("     Command: spect || 3 ......    ./iss.py input_file spect")
-    print("     Command: dist  || 4 ......    ./iss.py input_file dist")
-    print("     Command: gene  || 5 ......    ./iss.py input_file gene")
-    print("     Command: nul_p || 6 ......    ./iss.py input_file nul_p")
-    print("     Command: filt  || 7 ......    ./iss.py input_file filt")
-    print("     Command: freq  || 8 ......    ./iss.py input_file freq")
+    print("     Command: basic      || 0 ......    ./iss.py input_file basic")
+    print("     Command: frame      || 1 ......    ./iss.py input_file frame")
+    print("     Command: dft        || 2 ......    ./iss.py input_file dft")
+    print("     Command: spect      || 3 ......    ./iss.py input_file spect")
+    print("     Command: dist       || 4 ......    ./iss.py input_file dist")
+    print("     Command: gene       || 5 ......    ./iss.py input_file gene")
+    print("     Command: gen_filt   || 6 ......    ./iss.py input_file gen_filt")
+    print("     Command: nul_p      || 7 ......    ./iss.py input_file nul_p")
+    print("     Command: freq       || 8 ......    ./iss.py input_file freq")
+    print("     Command: filt       || 9 ......    ./iss.py input_file freq")
     print("......................................................")
     return 0
 
@@ -141,16 +142,20 @@ def split_to_frames(data, sample_rate):
     inc = 512    # overlap by 512
     width = 1024 # one frame lenght    
 
-    new_data = np.copy(data)
-    new_data[0:len(data)] = 0
+    #new_data = np.copy(data)
+    #new_data[0:len(data)] = 0
+    
+    new_data = []
     
     # Get information about signal
     data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
-
     for i in range(0, lenght_sam, inc):
-        new_data[i:i+width] += data[i:i+width]
+        new_data += [data[i:i+width]]
 
+    ## TODO PRINT AND CREATE PRINTING FUNCITON
+
+    new_data = np.array(new_data)
     return new_data
 
 
@@ -168,10 +173,99 @@ def com_2_frame(data, sample_rate):
     basic_signal_info_print(data, sample_rate)
     
     data = split_to_frames(data, sample_rate)
-    data = data[0:1024]
+    data = data[1024:2048]
 
-    create_picture(data, sample_rate)
+    # time from to 
+    time = np.linspace(0, 1)
+    plt.figure(figsize=(20,10))
+    plt.plot(time, data, label="", color="green")
+    plt.plot(time, data, label="")
+    plt.xlabel("time [s]")
+    plt.ylabel("amplitude")
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
 
+    #create_picture(data, sample_rate)
+    return 0
+
+
+
+##################### 
+# Implementujte vlastnı́ funkci pro výpočet diskrétnı́ Fourierovy transformace pro N=1024 vzorků. Snažte se pra-
+# covat ”vektorově”, tedy s minimálnı́m počtem cyklů. Transformace by měla být realizována jako násobenı́ matice
+# bázı́ s vektorem signálu. Spusťte Vaši funkci na vybraném rámci, zobrazte modul DFT pro frekvence od 0 do F 2 s
+# se slušnou frekvenčnı́ osou v Hz. Porovnejte Váš výsledek s knihovnı́ implementacı́ FFT (např. np.fft.fft) -
+# graficky a budete-li chtı́t, pomocı́ funkce na přibližné porovnánı́, např. np.allclose.
+def com_2_dtf(data, sample_rate):
+    print("DTF")
+    return 0
+
+##################### 
+# Pro celý signál vypočtěte a zobrazte “logaritmický výkonový spektrogram” tedy obrázek s časem v sekundách
+# na x-ové ose a s frekvencı́ v Hz na y-ové ose (opět do poloviny vzorkovacı́ frekvence). Použijte opět délku okna
+# 1024 vzorků a překrytı́ 512 vzorků. Hodnoty jednotlivých koeficientů DFT upravte pomocı́ P [k] = 10 log 10 |X[k]| 2 .
+# Můžete využı́t knihovnı́ funkci, ale rádi bychom, aby časová a frekvenčnı́ osa měly správné hodnoty. Pro hodnotu
+# koeficientu můžete dle libosti použı́t stupeň šedi nebo barvu.
+def com_3_spectogram(data, sample_rate):
+    print("spectogram")
+    return 0
+
+
+##################### 
+# Na spektrogramu budou jasně viditelné rušivé komponenty. Určete jejich frekvence f 1 , f 2 , f 3 , f 4 v Hz. Ověřte, že
+# jsou 4 rušivé cosinusovky harmonicky vztažené, tedy že f 2 , f 3 a f 4 jsou násobky té nejnižšı́ frekvence. Na určenı́
+# frekvencı́ si můžete napsat funkci nebo je odečı́st “ručně” ze spektrogramu či jednoho spektra.
+# Hint: při odečı́tánı́ z jednoho spektra si dejte pozor na to, abyste rušivou frekvenci nezaměnili za součást
+# spektra řeči.
+def com_4_dist(data, sample_rate):
+    print("dist")
+    return 0
+
+
+##################### 
+# Generovánı́ signálu – 3 body
+# Vygenerujte signál se směsı́ 4 cosinusovek na frekvencı́ch f 1 , f 2 , f 3 , f 4 , o stejné délce jako původnı́ signál. Uložte
+# jej do souboru audio/4cos.wav. Zobrazte jeho spektrogram. Poslechem a srovnánı́m spektrogramů ověřte, že
+# jste frekvence určili a signál vygenerovali správně.
+def com_5_gene(data, sample_rate):
+    print("generate")
+    return 0
+
+
+##################### 
+# Čisticı́ filtr – 3 body
+# Navrhněte filtr nebo sadu filtrů typu pásmová zádrž pro čištěnı́ signálu — musı́ potlačovat frekvence f 1 , f 2 , f 3 ,
+# f 4 . Můžete postupovat jednou ze třı́ alternativ:
+def com_6_gene_filt(data, sample_rate):
+    print("clean")
+    return 0
+
+
+##################### 
+# Nulové body a póly – 2 body
+# Vypočtěte nulové body a póly navrženého filtru nebo filtrů a zobrazte je v komplexnı́ rovině. Zde budou ve
+# výhodě uživatelé Matlabu či Octave, kteřı́ využijı́ funkce zplane. Pythonisté si ji budou muset naprogramovat
+# (asi 5 řádků, využijte np.roots) nebo vygooglit již hotovou.
+def com_7_nul_p(data, sample_rate):
+    print("nul points ")
+    return 0
+
+##################### 
+# Frekvenčnı́ charakteristika – 2 body
+# Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
+# potlačuje rušivý signál na správných frekvencı́ch.
+def com_8_freq(data, sample_rate):
+    print("freq charac")
+    return 0
+
+
+##################### 
+# Frekvenčnı́ charakteristika – 2 body
+# Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
+# potlačuje rušivý signál na správných frekvencı́ch.
+def com_9_filt(data, sample_rate):
+    print("filter ")
+    return 0
 
 
 ##
@@ -193,19 +287,21 @@ def call_command(command, data, sample_rate):
     elif command == "frame" or command == "1":
         com_2_frame(data, sample_rate)
     elif command == "dft" or command == "2":
-        print("dft")
+        com_2_dtf(data, sample_rate)
     elif command == "spect" or command == "3":
-        print("spect")
+        com_3_spectogram(data, sample_rate)
     elif command == "dist" or command == "4":
-        print("dist")
+        com_4_dist(data,sample_rate)
     elif command == "gene" or command == "5":
-        print("gene")
-    elif command == "nul_p" or command == "6":
-        print("nul_p")
-    elif command == "filt" or command == "7":
-        print("filt")
+        com_5_gene(data,sample_rate)
+    elif command == "gen_filt" or command == "6":
+        com_6_gene_filt(data,sample_rate)
+    elif command == "nul_p" or command == "7":
+        com_7_nul_p(data,sample_rate)
     elif command == "freq" or command == "8":
-        print("freq")
+        com_8_freq(data,sample_rate)
+    elif command == "filt" or command == "9":
+        com_9_filt(data,sample_rate)
     else:
         print("ERROR unknow... " + command + " ...command.")
         exit(1)
