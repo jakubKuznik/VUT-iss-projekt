@@ -2,14 +2,17 @@
 # Kuznik Jakub
 # xkuzni04@stud.fit.vutbr.cz
 
-
+import math
 import os.path                      ## For checking if file exist 
 import time
 import numpy as np
+from numpy import mean              ## Expected value
+
 import sys
 import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
 import matplotlib.colors as mcolors ## For signal plot collor 
+
 from scipy.io import wavfile
 
 ##
@@ -58,75 +61,6 @@ def parse_arguments(args):
 
     return file_path, command
 
-
-##
-# open file from filepath
-def open_waw_file(filepath):
-
-    ## if file doesn't exist.
-    if os.path.isfile(filepath) == False:
-        print("ERROR: file: .... " + filepath + " .... doesn't exist.")
-        exit()
-
-    ## Open waw file
-    # Code from iss_project: Zmolikova #####################
-    sample_rate, data = wavfile.read(filepath)
-    ########################################################
-    return sample_rate, data
-
-##
-# Normalize data 
-def normalize_signal(data):
-    return data / 2 ** 15   ## NORMALIZE SIGNAL 
-
-##
-# Get middle value from signal
-def middle_value(data):
-
-    return 0
-
-##
-# split to frames 
-def split_to_frames(data):
-
-    return 0
-
-##
-# Call command exit program if error.  
-def call_command(command, data, sample_rate):
-
-
-    if len(command) == 0:
-        print("ERROR missing command.")
-        exit(1)
-    
-    ## normalize signal for commands 1 - 8
-    if command != "basic" and command != "0":
-        data = normalize_signal(data)
-
-    if command == "basic" or command == "0":
-        create_picture(data, sample_rate)
-    elif command == "frame" or command == "1":
-        print("frame")
-    elif command == "dft" or command == "2":
-        print("dft")
-    elif command == "spect" or command == "3":
-        print("spect")
-    elif command == "dist" or command == "4":
-        print("dist")
-    elif command == "gene" or command == "5":
-        print("gene")
-    elif command == "nul_p" or command == "6":
-        print("nul_p")
-    elif command == "filt" or command == "7":
-        print("filt")
-    elif command == "freq" or command == "8":
-        print("freq")
-    else:
-        print("ERROR unknow... " + command + " ...command.")
-        exit(1)
-    return 0
-
 ##
 # Get basic info about signal.
 # Maximum and minimum value.
@@ -170,13 +104,115 @@ def create_picture(data, sample_rate):
     plt.show()
 
 ##
+# open file from filepath
+def open_waw_file(filepath):
+
+    ## if file doesn't exist.
+    if os.path.isfile(filepath) == False:
+        print("ERROR: file: .... " + filepath + " .... doesn't exist.")
+        exit()
+
+    ## Open waw file
+    # Code from iss_project: Zmolikova #####################
+    sample_rate, data = wavfile.read(filepath)
+    ########################################################
+    return sample_rate, data
+
+##
+# Central signal by sub Epected value (střední hodnota)
+def center_signal(data):
+    expected_value = mean(data)
+    data = data - expected_value
+    return data
+
+##
+# Normalize data 
+def normalize_signal(data):
+    data_abs = abs(data)
+    max_value = max(data_abs)
+    return (data / max_value) 
+
+
+##
+# Split signal to frames with 1024 samples each frame overlaps frame before by 512
+def split_to_frames(data, sample_rate):
+    
+    # Get information about signal
+    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+
+    frames_sum = math.ceil(lenght_sam/1024)      #math.ceil number round up
+
+    for i in range(0, frames_sum):
+        for j in range(0, 1023):
+            print(data[j])
+    
+    return 0
+
+##################### 
+# Načtený signál ustředněte (odečtěte střednı́ hodnotu) a normalizujte do dynamického rozsahu -1 až 1 dělenı́m
+# maximem absolutnı́ hodnoty. Signál rozdělte na úseky (rámce) o délce 1024 vzorků s překrytı́m 512 vzorků, rámce
+# uložte jako sloupce matice. Vyberte ”pěkný” rámec s periodickým charakterem (znělý) a zobrazte jej se slušnou
+# časovou osou v sekundách.
+def com_2_frame(data, sample_rate):
+    
+    print("frame")
+    data = center_signal(data)
+    data = normalize_signal(data)
+    basic_signal_info_print(data, sample_rate)
+    
+    #data = split_to_frames(data, sample_rate)
+    split_to_frames(data, sample_rate)
+
+    create_picture(data, sample_rate)
+
+
+
+##
+# Call command exit program if error.  
+def call_command(command, data, sample_rate):
+
+
+    if len(command) == 0:
+        print("ERROR missing command.")
+        exit(1)
+    
+    ## normalize signal for commands 1 - 8
+    #if command != "basic" and command != "0":
+    #    data = normalize_signal(data)
+
+
+    if command == "basic" or command == "0":
+        create_picture(data, sample_rate)
+    elif command == "frame" or command == "1":
+        com_2_frame(data, sample_rate)
+    elif command == "dft" or command == "2":
+        print("dft")
+    elif command == "spect" or command == "3":
+        print("spect")
+    elif command == "dist" or command == "4":
+        print("dist")
+    elif command == "gene" or command == "5":
+        print("gene")
+    elif command == "nul_p" or command == "6":
+        print("nul_p")
+    elif command == "filt" or command == "7":
+        print("filt")
+    elif command == "freq" or command == "8":
+        print("freq")
+    else:
+        print("ERROR unknow... " + command + " ...command.")
+        exit(1)
+    return 0
+
+
+##
 #
 def main():
 
-    file_path = ""  # Path to waw file.
-    command = ""    # Command that will be executed.
-    data = 0        # Data from waw file 
-    sample_rate = 0 # sample rate of waw file 
+    file_path = ""      # Path to waw file.
+    command = ""        # Command that will be executed.
+    data = 0            # Data from waw file 
+    sample_rate = 0     # sample rate of waw file 
     
 
 
