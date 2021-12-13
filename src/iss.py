@@ -241,6 +241,7 @@ def com_2_dtf(data, sample_rate):
         fourier[0].append(a)
     ###################################################################
 
+    fourier[0] = np.abs(fourier[0])
     #new_data = np.array(new_data) ## transpon matrix
     plt_frame(fourier, 512, 0, 0, 512 ,"FS [hz]", "Amplitude")
     
