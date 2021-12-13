@@ -9,6 +9,7 @@ import numpy as np
 from numpy import mean              ## Expected value
 
 import sys
+import numpy
 from numpy.core.fromnumeric import shape, size
 import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
@@ -23,7 +24,7 @@ def help():
     print("execution: ..........    ./iss.py -h")
     print(".......................................................")
     print("     Command: basic      || 0 ......    ./iss.py input_file basic")
-    print("     Command: frame      || 1 ......    ./iss.py input_file frame")
+    print("     Command: frame 0    || 1 0 ......    ./iss.py input_file frame")
     print("     Command: dft        || 2 ......    ./iss.py input_file dft")
     print("     Command: spect      || 3 ......    ./iss.py input_file spect")
     print("     Command: dist       || 4 ......    ./iss.py input_file dist")
@@ -95,10 +96,9 @@ def create_picture(data, sample_rate):
     # Get information about signal
     data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
-    # time from to 
+    # time from to
     time = np.linspace(0, lenght_sec, lenght_sam)
     plt.figure(figsize=(20,10))
-    plt.plot(time, data, label="", color="green")
     plt.plot(time, data, label="")
     plt.xlabel("time [s]")
     plt.ylabel("amplitude")
@@ -112,8 +112,8 @@ def open_waw_file(filepath):
     ## if file doesn't exist.
     if os.path.isfile(filepath) == False:
         print("ERROR: file: .... " + filepath + " .... doesn't exist.")
-        exit()
 
+        exit()
     ## Open waw file
     # Code from iss_project: Zmolikova #####################
     sample_rate, data = wavfile.read(filepath)
@@ -139,24 +139,51 @@ def normalize_signal(data):
 # Split signal to frames with 1024 samples each frame overlaps frame before by 512
 def split_to_frames(data, sample_rate):
     
-    inc = 512    # overlap by 512
-    width = 1024 # one frame lenght    
-
-    #new_data = np.copy(data)
-    #new_data[0:len(data)] = 0
-    
-    new_data = []
-    
     # Get information about signal
     data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+    
+    inc = 512    # overlap by 512
+    width = 1024 # one frame lenght        
+    new_data = []
+    
+    frame_size = (lenght_sam/inc)
+    frame_size = math.ceil(frame_size)
 
     for i in range(0, lenght_sam, inc):
         new_data += [data[i:i+width]]
 
     ## TODO PRINT AND CREATE PRINTING FUNCITON
+    new_data = np.array(new_data) ## transpon matrix
+    return new_data 
 
-    new_data = np.array(new_data)
-    return new_data
+##
+# 0 frame is from 0 - 1024 
+# 1 frame is from 512 - 1536 
+# reurn frame time from to 
+def get_frame_info(frame_size, frame_index, lenght_sec, lenght_sam):
+
+    one_sample_time = lenght_sec / lenght_sam
+    time_from = (frame_index*512)*one_sample_time
+    time_to = time_from + (frame_size*one_sample_time) 
+
+    return one_sample_time, time_from, time_to
+
+##
+# Plt one frame
+# lengt_sec, lenght_sam - are lenght of whole datas 
+def plt_frame(data, frame_width, frame_index, lenght_sec, lenght_sam):
+
+    ## GET INFO ABOUT FRAME 
+    step, time_from, time_to = get_frame_info(frame_width, frame_index, lenght_sec, lenght_sam) 
+
+    time = np.linspace(time_from, time_to, 1024) 
+    plt.figure(figsize=(20,10))
+    plt.plot(time, data[frame_index], label="")
+    plt.xlabel("time [s]")
+    plt.ylabel("amplitude")
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
+    return 0
 
 
 
@@ -165,27 +192,19 @@ def split_to_frames(data, sample_rate):
 # maximem absolutnı́ hodnoty. Signál rozdělte na úseky (rámce) o délce 1024 vzorků s překrytı́m 512 vzorků, rámce
 # uložte jako sloupce matice. Vyberte ”pěkný” rámec s periodickým charakterem (znělý) a zobrazte jej se slušnou
 # časovou osou v sekundách.
-def com_2_frame(data, sample_rate):
-    
+def com_1_frame(data, sample_rate):
     print("Frame")
+    
+    frame_width = 1024 ## width of one frame 
+    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+
+    ## normalize center and split to frames 
     data = center_signal(data)
     data = normalize_signal(data)
-    basic_signal_info_print(data, sample_rate)
-    
-    data = split_to_frames(data, sample_rate)
-    data = data[1024:2048]
+    data = split_to_frames(data, sample_rate)   
 
-    # time from to 
-    time = np.linspace(0, 1)
-    plt.figure(figsize=(20,10))
-    plt.plot(time, data, label="", color="green")
-    plt.plot(time, data, label="")
-    plt.xlabel("time [s]")
-    plt.ylabel("amplitude")
-    plt.savefig('out.pdf', bbox_inches="tight")
-    plt.show()
+    plt_frame(data, frame_width, 2, lenght_sec, lenght_sam)
 
-    #create_picture(data, sample_rate)
     return 0
 
 
@@ -277,15 +296,11 @@ def call_command(command, data, sample_rate):
         print("ERROR missing command.")
         exit(1)
     
-    ## normalize signal for commands 1 - 8
-    #if command != "basic" and command != "0":
-    #    data = normalize_signal(data)
-
 
     if command == "basic" or command == "0":
         create_picture(data, sample_rate)
     elif command == "frame" or command == "1":
-        com_2_frame(data, sample_rate)
+        com_1_frame(data, sample_rate)
     elif command == "dft" or command == "2":
         com_2_dtf(data, sample_rate)
     elif command == "spect" or command == "3":
