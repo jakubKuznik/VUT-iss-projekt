@@ -6,6 +6,7 @@ import math
 import os.path                      ## For checking if file exist 
 import time
 import numpy as np
+import cmath    
 from numpy import mean              ## Expected value
 
 import sys
@@ -35,6 +36,9 @@ def help():
     print("     Command: filt       || 9 ......    ./iss.py input_file freq")
     print("......................................................")
     return 0
+
+
+frame = 10
 
 
 ##
@@ -146,13 +150,10 @@ def split_to_frames(data, sample_rate):
     width = 1024 # one frame lenght        
     new_data = []
     
-    frame_size = (lenght_sam/inc)
-    frame_size = math.ceil(frame_size)
 
     for i in range(0, lenght_sam, inc):
         new_data += [data[i:i+width]]
 
-    ## TODO PRINT AND CREATE PRINTING FUNCITON
     new_data = np.array(new_data) ## transpon matrix
     return new_data 
 
@@ -171,16 +172,13 @@ def get_frame_info(frame_size, frame_index, lenght_sec, lenght_sam):
 ##
 # Plt one frame
 # lengt_sec, lenght_sam - are lenght of whole datas 
-def plt_frame(data, frame_width, frame_index, lenght_sec, lenght_sam):
+def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
 
-    ## GET INFO ABOUT FRAME 
-    step, time_from, time_to = get_frame_info(frame_width, frame_index, lenght_sec, lenght_sam) 
-
-    time = np.linspace(time_from, time_to, 1024) 
+    time = np.linspace(x_from, x_to, frame_width) 
     plt.figure(figsize=(20,10))
     plt.plot(time, data[frame_index], label="")
-    plt.xlabel("time [s]")
-    plt.ylabel("amplitude")
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
     plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
     return 0
@@ -203,7 +201,11 @@ def com_1_frame(data, sample_rate):
     data = normalize_signal(data)
     data = split_to_frames(data, sample_rate)   
 
-    plt_frame(data, frame_width, 2, lenght_sec, lenght_sam)
+    ## GET INFO ABOUT FRAME 
+    step, time_from, time_to = get_frame_info(frame_width, frame, lenght_sec, lenght_sam) 
+
+    plt_frame(data, frame_width, frame, time_from, time_to ,"time [s]", "Amplitude")
+
 
     return 0
 
@@ -217,7 +219,37 @@ def com_1_frame(data, sample_rate):
 # graficky a budete-li chtı́t, pomocı́ funkce na přibližné porovnánı́, např. np.allclose.
 def com_2_dtf(data, sample_rate):
     print("DTF")
+    
+    frame_width = 1024 ## width of one frame 
+    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+
+    ## normalize center and split to frames 
+    data = center_signal(data)
+    data = normalize_signal(data)
+    data = split_to_frames(data, sample_rate)   
+
+    one_frame = data[frame]
+    fourier = [[]]
+
+    ##### TODO rework to matrix 
+    N = len(data[frame]) ## number of samples
+    for k in range(N): 
+        a = 0
+        for n in range(N):
+            a += one_frame[n]*cmath.exp(-2j * cmath.pi * k * n * (1/N))
+        if k == 512: break
+        fourier[0].append(a)
+    ###################################################################
+
+    #new_data = np.array(new_data) ## transpon matrix
+    plt_frame(fourier, 512, 0, 0, 512 ,"FS [hz]", "Amplitude")
+    
     return 0
+
+    # chuj = np.fft.fft(one_frame) #### CONTROL 
+    # plt.plot(chuj)
+    
+    
 
 ##################### 
 # Pro celý signál vypočtěte a zobrazte “logaritmický výkonový spektrogram” tedy obrázek s časem v sekundách
