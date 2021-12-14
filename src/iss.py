@@ -16,7 +16,12 @@ import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
 import matplotlib.colors as mcolors ## For signal plot collor 
 
+import scipy.io as sc
 from scipy.io import wavfile
+from scipy.signal import spectrogram, lfilter, freqz, tf2zpk
+
+
+
 
 ##
 # Prints help message
@@ -100,6 +105,7 @@ def create_picture(data, sample_rate):
     # Get information about signal
     data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
+
     # time from to
     time = np.linspace(0, lenght_sec, lenght_sam)
     plt.figure(figsize=(20,10))
@@ -117,7 +123,6 @@ def open_waw_file(filepath):
     if os.path.isfile(filepath) == False:
         print("ERROR: file: .... " + filepath + " .... doesn't exist.")
 
-        exit()
     ## Open waw file
     # Code from iss_project: Zmolikova #####################
     sample_rate, data = wavfile.read(filepath)
@@ -154,6 +159,7 @@ def split_to_frames(data, sample_rate):
     for i in range(0, lenght_sam, inc):
         new_data += [data[i:i+width]]
 
+
     new_data = np.array(new_data) ## transpon matrix
     return new_data 
 
@@ -183,6 +189,24 @@ def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
     plt.show()
     return 0
 
+##
+# Realise dft.
+def dtf_func(data, index):
+    
+    one_frame = data[index]
+    fourier = [[]]
+
+    ##### TODO rework to matrix 
+    N = len(data[index]) ## number of samples
+    for k in range(N): 
+        a = 0
+        for n in range(N):
+            a += one_frame[n]*cmath.exp(-2j * cmath.pi * k * n * (1/N))
+        if k == 512: break
+        fourier[0].append(a)
+    ###################################################################
+    fourier[0] = np.abs(fourier[0])
+    return fourier[0]
 
 
 ##################### 
@@ -201,6 +225,8 @@ def com_1_frame(data, sample_rate):
     data = normalize_signal(data)
     data = split_to_frames(data, sample_rate)   
 
+
+
     ## GET INFO ABOUT FRAME 
     step, time_from, time_to = get_frame_info(frame_width, frame, lenght_sec, lenght_sam) 
 
@@ -208,6 +234,7 @@ def com_1_frame(data, sample_rate):
 
 
     return 0
+
 
 
 
@@ -228,28 +255,16 @@ def com_2_dtf(data, sample_rate):
     data = normalize_signal(data)
     data = split_to_frames(data, sample_rate)   
 
-    one_frame = data[frame]
-    fourier = [[]]
 
-    ##### TODO rework to matrix 
-    N = len(data[frame]) ## number of samples
-    for k in range(N): 
-        a = 0
-        for n in range(N):
-            a += one_frame[n]*cmath.exp(-2j * cmath.pi * k * n * (1/N))
-        if k == 512: break
-        fourier[0].append(a)
-    ###################################################################
+    fourier = []
+    fourier.append(dtf_func(data, frame))
 
-    fourier[0] = np.abs(fourier[0])
-    #new_data = np.array(new_data) ## transpon matrix
+
+    # plot fourier transform of one frame 
     plt_frame(fourier, 512, 0, 0, 512 ,"FS [hz]", "Amplitude")
     
     return 0
 
-    # chuj = np.fft.fft(one_frame) #### CONTROL 
-    # plt.plot(chuj)
-    
     
 
 ##################### 
@@ -259,8 +274,44 @@ def com_2_dtf(data, sample_rate):
 # Můžete využı́t knihovnı́ funkci, ale rádi bychom, aby časová a frekvenčnı́ osa měly správné hodnoty. Pro hodnotu
 # koeficientu můžete dle libosti použı́t stupeň šedi nebo barvu.
 def com_3_spectogram(data, sample_rate):
+    
     print("spectogram")
+    frame_width = 1024 ## width of one frame 
+    noverlap = 512
+    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+
+    ## normalize center and split to frames 
+    data = center_signal(data)
+    data = normalize_signal(data)
+
+    plt.figure(figsize=(20,10))
+    plt.specgram(data, Fs=sample_rate, NFFT=frame_width, noverlap=noverlap, mode='psd', scale='dB')
+    plt.ylabel('Frekvence [Hz]')
+    plt.xlabel('Time [sec]')
+    plt.colorbar()
+    plt.show()
+
     return 0
+    
+    
+    """
+    MATICE
+    
+    data = split_to_frames(data, sample_rate)   
+
+    print(len(data))
+    # GET All spectra 
+    fourier = []
+    matrix = np.zeros((512,63))
+    print(len(data))
+
+    for i in range(0,len(data)-1):
+        fourier.append(dtf_func(data, i))
+        matrix[0:512,i] = fourier[i]
+        matrix[0:512,i] = 10 * np.log10((matrix[0:512,i])**2)
+
+    f, t, sgr = spectrogram(sample_rate, matrix)
+    """
 
 
 ##################### 
@@ -364,8 +415,6 @@ def main():
     command = ""        # Command that will be executed.
     data = 0            # Data from waw file 
     sample_rate = 0     # sample rate of waw file 
-    
-
 
     file_path, command = parse_arguments(sys.argv)  # get file_path and command 
     
@@ -379,4 +428,4 @@ def main():
 if __name__ == '__main__':
     start = time.time()
     main()
-    #print(time.time() - start)
+    print(time.time() - start)
