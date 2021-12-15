@@ -182,7 +182,7 @@ def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
 
     time = np.linspace(x_from, x_to, frame_width) 
     plt.figure(figsize=(20,10))
-    plt.plot(time, data[frame_index], label="")
+    plt.plot(time, data, label="")
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.savefig('out.pdf', bbox_inches="tight")
@@ -190,23 +190,36 @@ def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
     return 0
 
 ##
-# Realise dft.
+# Realise DFT.
 def dtf_func(data, index):
     
     one_frame = data[index]
-    fourier = [[]]
 
-    ##### TODO rework to matrix 
-    N = len(data[index]) ## number of samples
-    for k in range(N): 
-        a = 0
-        for n in range(N):
-            a += one_frame[n]*cmath.exp(-2j * cmath.pi * k * n * (1/N))
-        if k == 512: break
-        fourier[0].append(a)
-    ###################################################################
-    fourier[0] = np.abs(fourier[0])
-    return fourier[0]
+    N = len(one_frame)                       # Samples in data 
+    n = np.arange(N)                         # create values from 0 1 2 ... 1024[frame_width]
+    k = n.reshape((N, 1))                    # 1d array of size N in y-axis
+    M = np.exp(-2j * np.pi * k * n / N)      # 2d array(matrix) of size N**2
+    fourier = np.dot(M, one_frame)           # multiply 1d data matrix with 2d
+    half = math.ceil(N/2)
+    return np.abs(fourier[0:half])             # resize to half becouse second half is same
+
+### SAME BUT SLOW 
+#    for i in range(0,len(data)-1):
+#        fourier.append(dtf_func(data, i))
+#        matrix[0:512,i] = fourier[i]
+#
+#    ##### TODO rework to matrix 
+#    N = len(data[index]) ## number of samples
+#    for k in range(N): 
+#        a = 0
+#        for n in range(N):
+#            a += one_frame[n]*cmath.exp(-2j * cmath.pi * k * n * (1/N))
+#        if k == 512: break
+#        fourier[0].append(a)
+#    ###################################################################
+#    fourier[0] = np.abs(fourier[0])
+#    return fourier[0]
+#
 
 
 ##################### 
@@ -256,9 +269,12 @@ def com_2_dtf(data, sample_rate):
     data = split_to_frames(data, sample_rate)   
 
 
-    fourier = []
-    fourier.append(dtf_func(data, frame))
+    #fourier = []
+    #fourier.append(dtf_func(data, frame))
+    fourier = np.zeros((512,), dtype='complex_')
+    fourier = dtf_func(data, frame)
 
+    print(shape(fourier), type(fourier), len(fourier))
 
     # plot fourier transform of one frame 
     plt_frame(fourier, 512, 0, 0, 512 ,"FS [hz]", "Amplitude")
@@ -289,6 +305,7 @@ def com_3_spectogram(data, sample_rate):
     plt.ylabel('Frekvence [Hz]')
     plt.xlabel('Time [sec]')
     plt.colorbar()
+    plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
 
     return 0
