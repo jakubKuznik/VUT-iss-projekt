@@ -11,6 +11,7 @@ from numpy import mean              ## Expected value
 
 import sys
 import numpy
+from numpy.__config__ import show
 from numpy.core.fromnumeric import shape, size
 import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
@@ -19,7 +20,7 @@ import matplotlib.colors as mcolors ## For signal plot collor
 import scipy.io as sc
 from scipy.io import wavfile
 from scipy.signal import spectrogram, lfilter, freqz, tf2zpk
-
+from scipy.io.wavfile import write
 
 
 
@@ -103,7 +104,7 @@ def basic_signal_info_print(data, sample_rate):
 def create_picture(data, sample_rate):
 
     # Get information about signal
-    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+    a, b, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
 
     # time from to
@@ -149,7 +150,7 @@ def normalize_signal(data):
 def split_to_frames(data, sample_rate):
     
     # Get information about signal
-    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+    a, b, c, lenght_sam = basic_signal_info(data, sample_rate)
     
     inc = 512    # overlap by 512
     width = 1024 # one frame lenght        
@@ -188,6 +189,28 @@ def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
     plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
     return 0
+
+##
+# Create cosinus
+#   amplitude     - cos amplitudu - signal height 
+#   freq          - frequency of cosin in hz 
+#   sample_rate   - sample rate 16 000
+#   sample_lenght - lenght of singal in samples
+def generate_cosinus(amplitude, freq, sample_rate, sample_lenght):
+    t = np.arange(sample_lenght) # generate matrix 
+    return (amplitude * np.cos(2 * (np.pi)/sample_rate * freq * t))
+
+##
+# Plot spectogram 
+def plot_spectogram(data, sample_rate, frame_width, noverlap):
+    plt.figure(figsize=(20,10))
+    plt.specgram(data, Fs=sample_rate, NFFT=frame_width, noverlap=noverlap, mode='psd', scale='dB')
+    plt.ylabel('Frekvence [Hz]')
+    plt.xlabel('Time [sec]')
+    plt.colorbar()
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
+
 
 ##
 # Realise DFT.
@@ -231,7 +254,7 @@ def com_1_frame(data, sample_rate):
     print("Frame")
     
     frame_width = 1024 ## width of one frame 
-    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
+    a, b, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
     ## normalize center and split to frames 
     data = center_signal(data)
@@ -294,20 +317,13 @@ def com_3_spectogram(data, sample_rate):
     print("spectogram")
     frame_width = 1024 ## width of one frame 
     noverlap = 512
-    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
     ## normalize center and split to frames 
     data = center_signal(data)
     data = normalize_signal(data)
 
-    plt.figure(figsize=(20,10))
-    plt.specgram(data, Fs=sample_rate, NFFT=frame_width, noverlap=noverlap, mode='psd', scale='dB')
-    plt.ylabel('Frekvence [Hz]')
-    plt.xlabel('Time [sec]')
-    plt.colorbar()
-    plt.savefig('out.pdf', bbox_inches="tight")
-    plt.show()
-
+    plot_spectogram(data, sample_rate, frame_width, noverlap)
+   
     return 0
     
     
@@ -338,7 +354,28 @@ def com_3_spectogram(data, sample_rate):
 # Hint: při odečı́tánı́ z jednoho spektra si dejte pozor na to, abyste rušivou frekvenci nezaměnili za součást
 # spektra řeči.
 def com_4_dist(data, sample_rate):
-    print("dist")
+    print("Generate signal from cosinus.")
+
+    a, b, c, lenght_sam = basic_signal_info(data, sample_rate)
+    
+    # this freq i find in my spectogram. 
+    # f2 is f1*2      f3 is f1*3    etc...
+    # frequencies in [Hz]
+    f1 = 720
+    frame_width = 1024 ## width of one frame 
+    noverlap = 512     # frame overlaps 
+    amplitude = 0.5    # apmpitude of cosine 
+
+    # first cosinus for inicialization 
+    cos = generate_cosinus(amplitude, f1, sample_rate, lenght_sam)
+    for i in range(2,4): ## generate others cosinus.
+        cos = cos + generate_cosinus(amplitude, i*f1, sample_rate, lenght_sam)
+
+    plot_spectogram(cos, sample_rate, frame_width, noverlap) 
+    
+    ## store signal as .wav file 
+    write("../audio/4cos.wav", sample_rate, cos.astype(np.int16))
+
     return 0
 
 
@@ -445,4 +482,4 @@ def main():
 if __name__ == '__main__':
     start = time.time()
     main()
-    print(time.time() - start)
+    #print(time.time() - start)
