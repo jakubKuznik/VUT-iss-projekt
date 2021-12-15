@@ -106,7 +106,6 @@ def create_picture(data, sample_rate):
     # Get information about signal
     a, b, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
-
     # time from to
     time = np.linspace(0, lenght_sec, lenght_sam)
     plt.figure(figsize=(20,10))
@@ -179,7 +178,7 @@ def get_frame_info(frame_size, frame_index, lenght_sec, lenght_sam):
 ##
 # Plt one frame
 # lengt_sec, lenght_sam - are lenght of whole datas 
-def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
+def plt_frame(data, frame_width, x_from, x_to, x_label, y_label):
 
     time = np.linspace(x_from, x_to, frame_width) 
     plt.figure(figsize=(20,10))
@@ -188,7 +187,6 @@ def plt_frame(data, frame_width, frame_index, x_from, x_to, x_label, y_label):
     plt.ylabel(y_label)
     plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
-    return 0
 
 ##
 # Create cosinus
@@ -251,6 +249,7 @@ def dtf_func(data, index):
 # uložte jako sloupce matice. Vyberte ”pěkný” rámec s periodickým charakterem (znělý) a zobrazte jej se slušnou
 # časovou osou v sekundách.
 def com_1_frame(data, sample_rate):
+    
     print("Frame")
     
     frame_width = 1024 ## width of one frame 
@@ -266,10 +265,8 @@ def com_1_frame(data, sample_rate):
     ## GET INFO ABOUT FRAME 
     step, time_from, time_to = get_frame_info(frame_width, frame, lenght_sec, lenght_sam) 
 
-    plt_frame(data, frame_width, frame, time_from, time_to ,"time [s]", "Amplitude")
+    plt_frame(data[frame], frame_width, time_from, time_to ,"time [s]", "Amplitude")
 
-
-    return 0
 
 
 
@@ -284,26 +281,20 @@ def com_2_dtf(data, sample_rate):
     print("DTF")
     
     frame_width = 1024 ## width of one frame 
-    data_min, data_max, lenght_sec, lenght_sam = basic_signal_info(data, sample_rate)
 
     ## normalize center and split to frames 
     data = center_signal(data)
     data = normalize_signal(data)
     data = split_to_frames(data, sample_rate)   
 
-
     #fourier = []
     #fourier.append(dtf_func(data, frame))
     fourier = np.zeros((512,), dtype='complex_')
     fourier = dtf_func(data, frame)
 
-    print(shape(fourier), type(fourier), len(fourier))
-
     # plot fourier transform of one frame 
-    plt_frame(fourier, 512, 0, 0, 512 ,"FS [hz]", "Amplitude")
+    plt_frame(fourier, frame_width/2, 0, frame_width/2 ,"FS [hz]", "Amplitude")
     
-    return 0
-
     
 
 ##################### 
@@ -324,8 +315,6 @@ def com_3_spectogram(data, sample_rate):
 
     plot_spectogram(data, sample_rate, frame_width, noverlap)
    
-    return 0
-    
     
     """
     MATICE
@@ -376,8 +365,6 @@ def com_4_dist(data, sample_rate):
     ## store signal as .wav file 
     write("../audio/4cos.wav", sample_rate, cos.astype(np.int16))
 
-    return 0
-
 
 ##################### 
 # Generovánı́ signálu – 3 body
@@ -386,7 +373,6 @@ def com_4_dist(data, sample_rate):
 # jste frekvence určili a signál vygenerovali správně.
 def com_5_gene(data, sample_rate):
     print("generate")
-    return 0
 
 
 ##################### 
@@ -395,7 +381,6 @@ def com_5_gene(data, sample_rate):
 # f 4 . Můžete postupovat jednou ze třı́ alternativ:
 def com_6_gene_filt(data, sample_rate):
     print("clean")
-    return 0
 
 
 ##################### 
@@ -405,7 +390,6 @@ def com_6_gene_filt(data, sample_rate):
 # (asi 5 řádků, využijte np.roots) nebo vygooglit již hotovou.
 def com_7_nul_p(data, sample_rate):
     print("nul points ")
-    return 0
 
 ##################### 
 # Frekvenčnı́ charakteristika – 2 body
@@ -413,7 +397,6 @@ def com_7_nul_p(data, sample_rate):
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_8_freq(data, sample_rate):
     print("freq charac")
-    return 0
 
 
 ##################### 
@@ -422,18 +405,15 @@ def com_8_freq(data, sample_rate):
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_9_filt(data, sample_rate):
     print("filter ")
-    return 0
 
 
 ##
 # Call command exit program if error.  
 def call_command(command, data, sample_rate):
 
-
     if len(command) == 0:
         print("ERROR missing command.")
         exit(1)
-    
 
     if command == "basic" or command == "0":
         create_picture(data, sample_rate)
@@ -458,7 +438,6 @@ def call_command(command, data, sample_rate):
     else:
         print("ERROR unknow... " + command + " ...command.")
         exit(1)
-    return 0
 
 
 ##
