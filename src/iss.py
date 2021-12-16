@@ -23,6 +23,8 @@ from scipy.signal import spectrogram, lfilter, freqz, tf2zpk
 from scipy.io.wavfile import write
 
 
+from IPython.display import Audio
+
 
 ##
 # Prints help message
@@ -261,9 +263,10 @@ def com_1_frame(data, sample_rate):
     data = split_to_frames(data, sample_rate)   
 
 
-
     ## GET INFO ABOUT FRAME 
     step, time_from, time_to = get_frame_info(frame_width, frame, lenght_sec, lenght_sam) 
+
+    print(time_to-time_from)
 
     plt_frame(data[frame], frame_width, time_from, time_to ,"time [s]", "Amplitude")
 
@@ -322,7 +325,8 @@ def com_3_spectogram(data, sample_rate):
     data = split_to_frames(data, sample_rate)   
 
     print(len(data))
-    # GET All spectra 
+    # GET All spectra        matrix[0:512,i] = fourier[i]
+
     fourier = []
     matrix = np.zeros((512,63))
     print(len(data))
@@ -357,13 +361,15 @@ def com_4_dist(data, sample_rate):
 
     # first cosinus for inicialization 
     cos = generate_cosinus(amplitude, f1, sample_rate, lenght_sam)
-    for i in range(2,4): ## generate others cosinus.
+    for i in range(2,5): ## generate others cosinus.
         cos = cos + generate_cosinus(amplitude, i*f1, sample_rate, lenght_sam)
 
     plot_spectogram(cos, sample_rate, frame_width, noverlap) 
-    
+
+    Audio(data=cos, rate=sample_rate)
     ## store signal as .wav file 
-    write("../audio/4cos.wav", sample_rate, cos.astype(np.int16))
+    write("../audio/4cos.wav", sample_rate, cos)
+
 
 
 ##################### 
