@@ -36,9 +36,9 @@ def help():
     print("     Command: frame 0    || 1 ......    ./iss.py input_file frame")
     print("     Command: dft        || 2 ......    ./iss.py input_file dft")
     print("     Command: spect      || 3 ......    ./iss.py input_file spect")
-    print("     Command: gen_filt   || 5 ......    ./iss.py input_file gen_filt")
-    print("     Command: dist       || 4 ......    ./iss.py input_file dist   #generate cosin signal" )
-    print("     Command: nul_p      || 6 ......    ./iss.py input_file nul_p")
+    print("     Command: dist       || 4 ......    ./iss.py input_file dist     #Generate cosin signal." )
+    print("     Command: gen_filt   || 5 ......    ./iss.py input_file gen_filt #Generate filter, Show impulse response." )
+    print("     Command: nul_p      || 6 ......    ./iss.py input_file nul_p" )
     print("     Command: freq       || 7 ......    ./iss.py input_file freq")
     print("     Command: filt       || 8 ......    ./iss.py input_file freq")
     print("......................................................")
@@ -375,20 +375,16 @@ def com_4_dist(data, sample_rate):
     write("../audio/4cos.wav", sample_rate, cos)
 
 
-##################### 
-# Čisticı́ filtr – 3 body
-# Navrhněte filtr nebo sadu filtrů typu pásmová zádrž pro čištěnı́ signálu — musı́ potlačovat frekvence f 1 , f 2 , f 3 ,
-# f 4 . Můžete postupovat jednou ze třı́ alternativ:
-def com_5_gene_filt(data, sample_rate):
-    frame_width = 1024 ## width of one frame 
-    noverlap = 512
 
-    ## normalize center and split to frames 
-    #data = center_signal(data)
-    data = normalize_signal(data)
-    print("clean")
- 
-    f = 720 # dist signal freguency
+
+################################# FUNCTION THAT GENERATE FILTER #########################################
+## Create filter and return its coeficients
+def FILTER_CREATE(sample_rate):
+    frame_width = 1024 ## width of one frame 
+    noverlap = 512     # frame overlaps
+    f = 720            # dist signal freguency
+
+    ## Filter coef
     a = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]  ## a y[n]
     b = []                              ## b x[n]
 
@@ -398,21 +394,41 @@ def com_5_gene_filt(data, sample_rate):
         ni = np.e**(1j*wi)
         ni_k = np.conj(ni) #comprehensively associated (komplexně sdružené)
 
-        b.append(ni)
+        b.append(ni)       ## append coeifcient to filter
         b.append(ni_k)
 
-
-    b = np.poly(b) ### gets coeficient for filter 
-    print(b)
+    b = np.poly(b)         ### gets coeficient for filter 
 
 
-    sf = lfilter(b, a, data)
-    plot_spectogram(sf,sample_rate, frame_width, noverlap)
 
-    Audio(data=sf, rate=sample_rate)
-    ## store signal as .wav file 
-    write("fil.wav", sample_rate, sf)
+
+
+##################### 
+# Čisticı́ filtr – 3 body
+# Navrhněte filtr nebo sadu filtrů typu pásmová zádrž pro čištěnı́ signálu — musı́ potlačovat frekvence f 1 , f 2 , f 3 ,
+# f 4 . Můžete postupovat jednou ze třı́ alternativ:
+def com_5_gene_filt(data, sample_rate):
+
+    ## gets filter coeficient     
+    a, b = FILTER_CREATE(sample_rate)
     
+    print("Filter");print("a: ", a);print("b: ", b)
+
+    # impulsne response
+    N_imp = 32
+    imp = [1, *np.zeros(N_imp-1)] # jednotkovy impuls
+
+    ## plot impulse response 
+    h = lfilter(b, a, imp)
+    plt.figure(figsize=(5,3))
+    plt.stem(np.arange(N_imp), h, basefmt=' ')
+    plt.gca().set_xlabel('$n$')
+    plt.gca().set_title('Impulsní odezva $h[n]$')
+    plt.grid(alpha=0.5, linestyle='--')
+    plt.tight_layout()
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
+        
 
 
 
@@ -437,6 +453,17 @@ def com_7_freq(data, sample_rate):
 # Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_8_filt(data, sample_rate):
+    
+    ## normalize center and split to frames 
+    # data = center_signal(data)
+    # data = normalize_signal(data)
+    sf = lfilter(b, a, data)
+    plot_spectogram(sf,sample_rate, frame_width, noverlap)
+
+    Audio(data=sf, rate=sample_rate)
+    ## store signal as .wav file 
+    write("fil.wav", sample_rate, sf)
+    
     print("filter ")
 
 
