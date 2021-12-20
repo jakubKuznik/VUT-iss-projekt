@@ -380,7 +380,40 @@ def com_4_dist(data, sample_rate):
 # Navrhněte filtr nebo sadu filtrů typu pásmová zádrž pro čištěnı́ signálu — musı́ potlačovat frekvence f 1 , f 2 , f 3 ,
 # f 4 . Můžete postupovat jednou ze třı́ alternativ:
 def com_5_gene_filt(data, sample_rate):
+    frame_width = 1024 ## width of one frame 
+    noverlap = 512
+
+    ## normalize center and split to frames 
+    #data = center_signal(data)
+    data = normalize_signal(data)
     print("clean")
+ 
+    f = 720 # dist signal freguency
+    a = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]  ## a y[n]
+    b = []                              ## b x[n]
+
+    # count null points 
+    for i in range(1,5):
+        wi = 2*np.pi*((f*i)/sample_rate)  # wi = 2pi/(fi/Fs)
+        ni = np.e**(1j*wi)
+        ni_k = np.conj(ni) #comprehensively associated (komplexně sdružené)
+
+        b.append(ni)
+        b.append(ni_k)
+
+
+    b = np.poly(b) ### gets coeficient for filter 
+    print(b)
+
+
+    sf = lfilter(b, a, data)
+    plot_spectogram(sf,sample_rate, frame_width, noverlap)
+
+    Audio(data=sf, rate=sample_rate)
+    ## store signal as .wav file 
+    write("fil.wav", sample_rate, sf)
+    
+
 
 
 ##################### 
