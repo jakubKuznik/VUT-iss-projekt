@@ -33,15 +33,14 @@ def help():
     print("execution: ..........    ./iss.py -h")
     print(".......................................................")
     print("     Command: basic      || 0 ......    ./iss.py input_file basic")
-    print("     Command: frame 0    || 1 0 ......    ./iss.py input_file frame")
+    print("     Command: frame 0    || 1 ......    ./iss.py input_file frame")
     print("     Command: dft        || 2 ......    ./iss.py input_file dft")
     print("     Command: spect      || 3 ......    ./iss.py input_file spect")
-    print("     Command: dist       || 4 ......    ./iss.py input_file dist")
-    print("     Command: gene       || 5 ......    ./iss.py input_file gene")
-    print("     Command: gen_filt   || 6 ......    ./iss.py input_file gen_filt")
-    print("     Command: nul_p      || 7 ......    ./iss.py input_file nul_p")
-    print("     Command: freq       || 8 ......    ./iss.py input_file freq")
-    print("     Command: filt       || 9 ......    ./iss.py input_file freq")
+    print("     Command: gen_filt   || 5 ......    ./iss.py input_file gen_filt")
+    print("     Command: dist       || 4 ......    ./iss.py input_file dist   #generate cosin signal" )
+    print("     Command: nul_p      || 6 ......    ./iss.py input_file nul_p")
+    print("     Command: freq       || 7 ......    ./iss.py input_file freq")
+    print("     Command: filt       || 8 ......    ./iss.py input_file freq")
     print("......................................................")
     return 0
 
@@ -346,6 +345,11 @@ def com_3_spectogram(data, sample_rate):
 # frekvencı́ si můžete napsat funkci nebo je odečı́st “ručně” ze spektrogramu či jednoho spektra.
 # Hint: při odečı́tánı́ z jednoho spektra si dejte pozor na to, abyste rušivou frekvenci nezaměnili za součást
 # spektra řeči.
+##################### 
+# Generovánı́ signálu – 3 body
+# Vygenerujte signál se směsı́ 4 cosinusovek na frekvencı́ch f 1 , f 2 , f 3 , f 4 , o stejné délce jako původnı́ signál. Uložte
+# jej do souboru audio/4cos.wav. Zobrazte jeho spektrogram. Poslechem a srovnánı́m spektrogramů ověřte, že
+# jste frekvence určili a signál vygenerovali správně.
 def com_4_dist(data, sample_rate):
     print("Generate signal from cosinus.")
 
@@ -354,7 +358,7 @@ def com_4_dist(data, sample_rate):
     # this freq i find in my spectogram. 
     # f2 is f1*2      f3 is f1*3    etc...
     # frequencies in [Hz]
-    f1 = 720
+    f1 = 720 
     frame_width = 1024 ## width of one frame 
     noverlap = 512     # frame overlaps 
     amplitude = 0.5    # apmpitude of cosine 
@@ -371,21 +375,11 @@ def com_4_dist(data, sample_rate):
     write("../audio/4cos.wav", sample_rate, cos)
 
 
-
-##################### 
-# Generovánı́ signálu – 3 body
-# Vygenerujte signál se směsı́ 4 cosinusovek na frekvencı́ch f 1 , f 2 , f 3 , f 4 , o stejné délce jako původnı́ signál. Uložte
-# jej do souboru audio/4cos.wav. Zobrazte jeho spektrogram. Poslechem a srovnánı́m spektrogramů ověřte, že
-# jste frekvence určili a signál vygenerovali správně.
-def com_5_gene(data, sample_rate):
-    print("generate")
-
-
 ##################### 
 # Čisticı́ filtr – 3 body
 # Navrhněte filtr nebo sadu filtrů typu pásmová zádrž pro čištěnı́ signálu — musı́ potlačovat frekvence f 1 , f 2 , f 3 ,
 # f 4 . Můžete postupovat jednou ze třı́ alternativ:
-def com_6_gene_filt(data, sample_rate):
+def com_5_gene_filt(data, sample_rate):
     print("clean")
 
 
@@ -394,14 +388,14 @@ def com_6_gene_filt(data, sample_rate):
 # Vypočtěte nulové body a póly navrženého filtru nebo filtrů a zobrazte je v komplexnı́ rovině. Zde budou ve
 # výhodě uživatelé Matlabu či Octave, kteřı́ využijı́ funkce zplane. Pythonisté si ji budou muset naprogramovat
 # (asi 5 řádků, využijte np.roots) nebo vygooglit již hotovou.
-def com_7_nul_p(data, sample_rate):
+def com_6_nul_p(data, sample_rate):
     print("nul points ")
 
 ##################### 
 # Frekvenčnı́ charakteristika – 2 body
 # Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
 # potlačuje rušivý signál na správných frekvencı́ch.
-def com_8_freq(data, sample_rate):
+def com_7_freq(data, sample_rate):
     print("freq charac")
 
 
@@ -409,7 +403,7 @@ def com_8_freq(data, sample_rate):
 # Frekvenčnı́ charakteristika – 2 body
 # Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
 # potlačuje rušivý signál na správných frekvencı́ch.
-def com_9_filt(data, sample_rate):
+def com_8_filt(data, sample_rate):
     print("filter ")
 
 
@@ -431,16 +425,14 @@ def call_command(command, data, sample_rate):
         com_3_spectogram(data, sample_rate)
     elif command == "dist" or command == "4":
         com_4_dist(data,sample_rate)
-    elif command == "gene" or command == "5":
-        com_5_gene(data,sample_rate)
-    elif command == "gen_filt" or command == "6":
-        com_6_gene_filt(data,sample_rate)
-    elif command == "nul_p" or command == "7":
-        com_7_nul_p(data,sample_rate)
-    elif command == "freq" or command == "8":
-        com_8_freq(data,sample_rate)
-    elif command == "filt" or command == "9":
-        com_9_filt(data,sample_rate)
+    elif command == "gen_filt" or command == "5":
+        com_5_gene_filt(data,sample_rate)
+    elif command == "nul_p" or command == "6":
+        com_6_nul_p(data,sample_rate)
+    elif command == "freq" or command == "7":
+        com_7_freq(data,sample_rate)
+    elif command == "filt" or command == "8":
+        com_8_filt(data,sample_rate)
     else:
         print("ERROR unknow... " + command + " ...command.")
         exit(1)
