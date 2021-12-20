@@ -6,24 +6,24 @@ import math
 import os.path                      ## For checking if file exist 
 import time
 import numpy as np
-import cmath    
-from numpy import mean              ## Expected value
-
 import sys
-import numpy
-from numpy.__config__ import show
-from numpy.core.fromnumeric import shape, size
-import wavio                        ## For waw file loading
 import matplotlib.pyplot as plt     ## For signal pictures
-import matplotlib.colors as mcolors ## For signal plot collor 
 
-import scipy.io as sc
+
+from numpy import mean              ## Expected value
 from scipy.io import wavfile
-from scipy.signal import spectrogram, lfilter, freqz, tf2zpk
+from scipy.signal import lfilter
 from scipy.io.wavfile import write
-
-
 from IPython.display import Audio
+
+
+
+#################### GLOBAL VARIABLES ########################
+frame_width = 1024 ## Width of one frame 
+noverlap = 512     ## Frames overlap.
+f_bad = 720        ## Frequency that is disruptive. It was found in signal spectogram
+frame = 10         ## Frame that will be shown 
+
 
 
 ##
@@ -45,7 +45,6 @@ def help():
     return 0
 
 
-frame = 10
 
 
 ##
@@ -152,13 +151,10 @@ def split_to_frames(data, sample_rate):
     # Get information about signal
     a, b, c, lenght_sam = basic_signal_info(data, sample_rate)
     
-    inc = 512    # overlap by 512
-    width = 1024 # one frame lenght        
     new_data = []
-    
 
-    for i in range(0, lenght_sam, inc):
-        new_data += [data[i:i+width]]
+    for i in range(0, lenght_sam, noverlap):
+        new_data += [data[i:i+frame_width]]
 
 
     new_data = np.array(new_data) ## transpon matrix
@@ -171,7 +167,7 @@ def split_to_frames(data, sample_rate):
 def get_frame_info(frame_size, frame_index, lenght_sec, lenght_sam):
 
     one_sample_time = lenght_sec / lenght_sam
-    time_from = (frame_index*512)*one_sample_time
+    time_from = (frame_index*noverlap)*one_sample_time
     time_to = time_from + (frame_size*one_sample_time) 
 
     return one_sample_time, time_from, time_to
@@ -201,7 +197,7 @@ def generate_cosinus(amplitude, freq, sample_rate, sample_lenght):
 
 ##
 # Plot spectogram 
-def plot_spectogram(data, sample_rate, frame_width, noverlap):
+def plot_spectogram(data, sample_rate):
     plt.figure(figsize=(20,10))
     plt.specgram(data, Fs=sample_rate, NFFT=frame_width, noverlap=noverlap, mode='psd', scale='dB')
     plt.ylabel('Frekvence [Hz]')
@@ -239,9 +235,7 @@ def dtf_func(data, index):
 #        if k == 512: break
 #        fourier[0].append(a)
 #    ###################################################################
-#    fourier[0] = np.abs(fourier[0])
-#    return fourier[0]
-#
+#    return np.abs(fourier[0])
 
 
 ##################### 
@@ -281,8 +275,6 @@ def com_1_frame(data, sample_rate):
 # graficky a budete-li chtı́t, pomocı́ funkce na přibližné porovnánı́, např. np.allclose.
 def com_2_dtf(data, sample_rate):
     print("DTF")
-    
-    frame_width = 1024 ## width of one frame 
 
     ## normalize center and split to frames 
     data = center_signal(data)
@@ -291,7 +283,7 @@ def com_2_dtf(data, sample_rate):
 
     #fourier = []
     #fourier.append(dtf_func(data, frame))
-    fourier = np.zeros((512,), dtype='complex_')
+    fourier = np.zeros((noverlap,), dtype='complex_')
     fourier = dtf_func(data, frame)
 
     # plot fourier transform of one frame 
@@ -308,37 +300,14 @@ def com_2_dtf(data, sample_rate):
 def com_3_spectogram(data, sample_rate):
     
     print("spectogram")
-    frame_width = 1024 ## width of one frame 
-    noverlap = 512
 
     ## normalize center and split to frames 
     data = center_signal(data)
     data = normalize_signal(data)
 
-    plot_spectogram(data, sample_rate, frame_width, noverlap)
+    plot_spectogram(data, sample_rate)
    
     
-    """
-    MATICE
-    
-    data = split_to_frames(data, sample_rate)   
-
-    print(len(data))
-    # GET All spectra        matrix[0:512,i] = fourier[i]
-
-    fourier = []
-    matrix = np.zeros((512,63))
-    print(len(data))
-
-    for i in range(0,len(data)-1):
-        fourier.append(dtf_func(data, i))
-        matrix[0:512,i] = fourier[i]
-        matrix[0:512,i] = 10 * np.log10((matrix[0:512,i])**2)
-
-    f, t, sgr = spectrogram(sample_rate, matrix)
-    """
-
-
 ##################### 
 # Na spektrogramu budou jasně viditelné rušivé komponenty. Určete jejich frekvence f 1 , f 2 , f 3 , f 4 v Hz. Ověřte, že
 # jsou 4 rušivé cosinusovky harmonicky vztažené, tedy že f 2 , f 3 a f 4 jsou násobky té nejnižšı́ frekvence. Na určenı́
@@ -358,17 +327,14 @@ def com_4_dist(data, sample_rate):
     # this freq i find in my spectogram. 
     # f2 is f1*2      f3 is f1*3    etc...
     # frequencies in [Hz]
-    f1 = 720 
-    frame_width = 1024 ## width of one frame 
-    noverlap = 512     # frame overlaps 
     amplitude = 0.5    # apmpitude of cosine 
 
     # first cosinus for inicialization 
-    cos = generate_cosinus(amplitude, f1, sample_rate, lenght_sam)
+    cos = generate_cosinus(amplitude, f_bad, sample_rate, lenght_sam)
     for i in range(2,5): ## generate others cosinus.
-        cos = cos + generate_cosinus(amplitude, i*f1, sample_rate, lenght_sam)
+        cos = cos + generate_cosinus(amplitude, i*f_bad, sample_rate, lenght_sam)
 
-    plot_spectogram(cos, sample_rate, frame_width, noverlap) 
+    plot_spectogram(cos, sample_rate) 
 
     Audio(data=cos, rate=sample_rate)
     ## store signal as .wav file 
@@ -380,17 +346,13 @@ def com_4_dist(data, sample_rate):
 ################################# FUNCTION THAT GENERATE FILTER #########################################
 ## Create filter and return its coeficients
 def FILTER_CREATE(sample_rate):
-    frame_width = 1024 ## width of one frame 
-    noverlap = 512     # frame overlaps
-    f = 720            # dist signal freguency
-
     ## Filter coef
     a = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]  ## a y[n]
     b = []                              ## b x[n]
 
     # count null points 
     for i in range(1,5):
-        wi = 2*np.pi*((f*i)/sample_rate)  # wi = 2pi/(fi/Fs)
+        wi = 2*np.pi*((f_bad*i)/sample_rate)  # wi = 2pi/(fi/Fs)
         ni = np.e**(1j*wi)
         ni_k = np.conj(ni) #comprehensively associated (komplexně sdružené)
 
@@ -399,6 +361,7 @@ def FILTER_CREATE(sample_rate):
 
     b = np.poly(b)         ### gets coeficient for filter 
 
+    return a, b
 
 
 
@@ -428,8 +391,6 @@ def com_5_gene_filt(data, sample_rate):
     plt.tight_layout()
     plt.savefig('out.pdf', bbox_inches="tight")
     plt.show()
-        
-
 
 
 ##################### 
@@ -454,11 +415,15 @@ def com_7_freq(data, sample_rate):
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_8_filt(data, sample_rate):
     
+    a, b = FILTER_CREATE(sample_rate)
+
     ## normalize center and split to frames 
     # data = center_signal(data)
     # data = normalize_signal(data)
+
+
     sf = lfilter(b, a, data)
-    plot_spectogram(sf,sample_rate, frame_width, noverlap)
+    plot_spectogram(sf,sample_rate)
 
     Audio(data=sf, rate=sample_rate)
     ## store signal as .wav file 
