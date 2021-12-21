@@ -10,9 +10,10 @@ import sys
 import matplotlib.pyplot as plt     ## For signal pictures
 
 
-from numpy import mean              ## Expected value
+from numpy import mean
+from numpy.core.fromnumeric import sort              ## Expected value
 from scipy.io import wavfile
-from scipy.signal import lfilter
+from scipy.signal import lfilter, freqz, tf2zpk
 from scipy.io.wavfile import write
 from IPython.display import Audio
 
@@ -399,7 +400,31 @@ def com_5_gene_filt(data, sample_rate):
 # výhodě uživatelé Matlabu či Octave, kteřı́ využijı́ funkce zplane. Pythonisté si ji budou muset naprogramovat
 # (asi 5 řádků, využijte np.roots) nebo vygooglit již hotovou.
 def com_6_nul_p(data, sample_rate):
-    print("nul points ")
+
+    a, b = FILTER_CREATE(sample_rate)
+    # nuls and pols 
+    z, p, k = tf2zpk(b, a)
+
+    # circle  
+    plt.figure(figsize=(4,3.5))
+    ang = np.linspace(0, 2*np.pi,100)
+    plt.plot(np.cos(ang), np.sin(ang))
+
+    # nuly, poly
+    plt.scatter(np.real(z), np.imag(z), marker='o', facecolors='none', edgecolors='r', label='nuly')
+    plt.scatter(np.real(p), np.imag(p), marker='x', color='g', label='póly')
+
+    plt.gca().set_xlabel('Realná složka $\mathbb{R}\{$z$\}$')
+    plt.gca().set_ylabel('Imaginarní složka $\mathbb{I}\{$z$\}$')
+
+    plt.grid(alpha=0.5, linestyle='--')
+    plt.legend(loc='upper right')
+
+    plt.tight_layout()
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
+
+    
 
 ##################### 
 # Frekvenčnı́ charakteristika – 2 body
@@ -407,6 +432,27 @@ def com_6_nul_p(data, sample_rate):
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_7_freq(data, sample_rate):
     print("freq charac")
+    
+    a, b = FILTER_CREATE(sample_rate)
+    # frekvencni charakteristika
+    w, H = freqz(b)
+    _, ax = plt.subplots(1, 2, figsize=(8,3))
+
+    ax[0].plot(w / 2 / np.pi * sample_rate, np.abs(H)/np.max(np.abs(H)))
+    ax[0].set_xlabel('Frekvence [Hz]')
+    ax[0].set_title('Modul frekvenční charakteristiky $|H(e^{j\omega})|$')
+
+    ax[1].plot(w / 2 / np.pi * sample_rate, np.angle(H))
+    ax[1].set_xlabel('Frekvence [Hz]')
+    ax[1].set_title('Argument frekvenční charakteristiky $\mathrm{arg}\ H(e^{j\omega})$')
+
+    for ax1 in ax:
+        ax1.grid(alpha=0.5, linestyle='--')
+
+    plt.tight_layout()
+    plt.savefig('out.pdf', bbox_inches="tight")
+    plt.show()
+
 
 
 ##################### 
@@ -414,13 +460,13 @@ def com_7_freq(data, sample_rate):
 # Vypočtěte frekvenčnı́ charakteristiku filtru/filtrů a zobrazte ji/je se slušnou frekvenčnı́ osou v Hz. Ověřte, že filtr
 # potlačuje rušivý signál na správných frekvencı́ch.
 def com_8_filt(data, sample_rate):
+    print("filter signal")
     
     a, b = FILTER_CREATE(sample_rate)
 
     ## normalize center and split to frames 
-    # data = center_signal(data)
-    # data = normalize_signal(data)
-
+    data = center_signal(data)
+    data = normalize_signal(data)
 
     sf = lfilter(b, a, data)
     plot_spectogram(sf,sample_rate)
@@ -428,8 +474,7 @@ def com_8_filt(data, sample_rate):
     Audio(data=sf, rate=sample_rate)
     ## store signal as .wav file 
     write("fil.wav", sample_rate, sf)
-    
-    print("filter ")
+
 
 
 ##
