@@ -464,6 +464,9 @@ def com_8_filt(data, sample_rate):
     
     a, b = FILTER_CREATE(sample_rate)
 
+    for i in range(0,len(b)):
+        print(i, b[i])
+
     ## normalize center and split to frames 
     data = center_signal(data)
     data = normalize_signal(data)
