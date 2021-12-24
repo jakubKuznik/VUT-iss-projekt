@@ -288,7 +288,7 @@ def com_2_dtf(data, sample_rate):
     fourier = dtf_func(data, frame)
 
     # plot fourier transform of one frame 
-    plt_frame(fourier, frame_width/2, 0, frame_width/2 ,"FS [hz]", "Amplitude")
+    plt_frame(fourier, frame_width/2, 0, sample_rate/2 ,"FS [hz]", "Amplitude")
     
     
 
